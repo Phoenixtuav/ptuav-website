@@ -83,34 +83,27 @@ export const InfiniteMovingCards = ({
           pauseOnHover && "hover:[animation-play-state:paused]"
         )}
       >
-        {items.map((item) => (
+        {items.map((item, idx) => (
           <li
-            className="w-[350px] max-w-full relative rounded-2xl border border-b-0 flex-shrink-0 border-slate-700 px-8 py-6 md:w-[450px]"
-            style={{
-              background:
-                "linear-gradient(180deg, var(--slate-800), var(--slate-900)",
-            }}
+            className="relative flex-shrink-0 flex items-center"
             key={item.name}
           >
-            <blockquote>
-              <div
-                aria-hidden="true"
-                className="user-select-none -z-1 pointer-events-none absolute -left-0.5 -top-0.5 h-[calc(100%_+_4px)] w-[calc(100%_+_4px)]"
-              ></div>
-              <span className=" relative z-20 text-sm leading-[1.6] text-gray-100 font-normal">
-                {item.quote}
-              </span>
-              <div className="relative z-20 mt-6 flex flex-row items-center">
-                <span className="flex flex-col gap-1">
-                  <span className=" text-sm leading-[1.6] text-gray-400 font-normal">
-                    {item.name}
-                  </span>
-                  <span className=" text-sm leading-[1.6] text-gray-400 font-normal">
-                    {item.title}
-                  </span>
-                </span>
-              </div>
-            </blockquote>
+            {/* Logo 容器 */}
+            <div className="px-12 py-4 flex items-center justify-center min-w-[180px]">
+              <img
+                src={item.image}
+                alt={item.name}
+                // 添加 hover:scale-110 (放大1.1倍) 
+                // transition-transform (仅对变换应用动画)
+                // duration-300 (动画持续300ms)
+                className="h-10 md:h-12 w-auto object-contain brightness-100 transition-transform duration-300 ease-in-out hover:scale-110 cursor-pointer" 
+              />
+            </div>
+
+            {/* 分隔竖线 */}
+            {idx !== items.length - 1 && (
+              <div className="h-8 w-[1px] bg-neutral-200 dark:bg-neutral-800 self-center" />
+            )}
           </li>
         ))}
       </ul>

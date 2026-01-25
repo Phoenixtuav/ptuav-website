@@ -1,0 +1,93 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { getEntry, render } from 'astro:content';
+
+// 1. 获取 about 文档
+const entry = await getEntry('pages', 'about');
+
+if (!entry) {
+  throw new Error('Could not find about page');
+}
+
+// 2. 渲染 Markdown 内容
+const { Content } = await render(entry);
+---
+
+<Layout title={`${entry.data.title} - Astro Tech`}>
+  <main class="bg-black min-h-screen">
+
+    {/* Hero 区域：背景图 + 标题 */}
+    <div class="relative h-[60vh] w-full flex items-center justify-center overflow-hidden">
+      {/* 背景图处理：遮罩加深，保证文字清晰 */}
+      <div class="absolute inset-0 z-0">
+        <img 
+          src={entry.data.image} 
+          alt="About Background" 
+          class="w-full h-full object-cover opacity-50"
+        />
+        <div class="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black"></div>
+      </div>
+
+      {/* 文字内容 */}
+      <div class="relative z-10 text-center px-4 max-w-4xl mx-auto mt-20">
+        <h1 class="text-5xl md:text-7xl font-bold text-white mb-6 tracking-tight">
+          {entry.data.title}
+        </h1>
+        <p class="text-xl md:text-2xl text-neutral-300 font-light leading-relaxed">
+          {entry.data.subtitle}
+        </p>
+      </div>
+    </div>
+
+    {/* 文章内容区域 */}
+    <div class="max-w-4xl mx-auto px-6 pb-24">
+      <article class="prose prose-invert prose-lg max-w-none prose-headings:font-bold prose-headings:tracking-tight prose-p:text-neutral-400 prose-p:leading-8 prose-li:text-neutral-400 prose-strong:text-white prose-strong:font-semibold">
+        <Content />
+      </article>
+      
+      {/* 底部装饰线 */}
+      <div class="mt-16 pt-8 border-t border-neutral-800 text-center">
+        <p class="text-neutral-500 italic text-sm">
+          Astro Tech — Constructing the Architecture of Future Intelligence.
+        </p>
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<style>
+  /* 自定义 Markdown 样式增强 */
+  /* 让 h2 (我们的使命等) 更像科技小标题 */
+  :global(article h2) {
+    font-size: 2rem;
+    color: white;
+    margin-top: 3rem;
+    margin-bottom: 1.5rem;
+    border-left: 4px solid #3b82f6; /* 蓝色竖线装饰 */
+    padding-left: 1rem;
+  }
+  
+  :global(article h3) {
+    font-size: 1.5rem;
+    color: #e5e5e5;
+    margin-top: 2rem;
+  }
+
+  :global(article ul) {
+    list-style-type: none;
+    padding-left: 0;
+  }
+
+  :global(article ul li) {
+    position: relative;
+    padding-left: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  :global(article ul li::before) {
+    content: "▹"; /* 自定义列表图标 */
+    color: #3b82f6;
+    position: absolute;
+    left: 0;
+  }
+</style>

@@ -1,0 +1,213 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { getCollection } from 'astro:content';
+// 尝试导入配置，如果没有则忽略
+import { CATEGORY_ORDER } from "../../config/categories";
+
+// 1. 获取所有产品
+const allProducts = await getCollection('products');
+
+// 2. 自动扫描分类
+const discoveredCategories = [...new Set(allProducts.map(p => p.data.category).filter(Boolean))];
+
+// 3. 构建最终分类列表 (保持原来的智能合并逻辑)
+let finalCategories = []; // 注意：这里我们不把 "全部" 放进这个列表，因为它是用来生成区块的
+const addedSet = new Set();
+
+// (A) 先加入配置文件的分类
+if (typeof CATEGORY_ORDER !== 'undefined') {
+  CATEGORY_ORDER.forEach(cat => {
+    if (cat !== "全部" && discoveredCategories.includes(cat)) { 
+      finalCategories.push(cat);
+      addedSet.add(cat);
+    }
+  });
+}
+
+// (B) 追加未配置的分类
+discoveredCategories.forEach(cat => {
+  if (!addedSet.has(cat)) {
+    finalCategories.push(cat);
+    addedSet.add(cat);
+  }
+});
+
+// 4. 将产品按分类分组 (Map结构: Category -> Product[])
+const productsByCategory = {};
+
+// 初始化所有分类的空数组，确保顺序
+finalCategories.forEach(cat => {
+  productsByCategory[cat] = [];
+});
+
+// 填充数据
+allProducts.forEach(product => {
+  const cat = product.data.category;
+  if (productsByCategory[cat]) {
+    productsByCategory[cat].push(product);
+  } else {
+    // 处理未分类或异常分类情况
+    if (!productsByCategory["其他"]) productsByCategory["其他"] = [];
+    productsByCategory["其他"].push(product);
+    if (!finalCategories.includes("其他")) finalCategories.push("其他");
+  }
+});
+
+// 对每个分类内的产品按 order 排序
+Object.keys(productsByCategory).forEach(cat => {
+  productsByCategory[cat].sort((a, b) => (a.data.order || 0) - (b.data.order || 0));
+});
+
+// 5. 准备筛选按钮列表 (包含"全部")
+const filterButtons = ["全部", ...finalCategories];
+---
+
+<Layout title="产品中心 - Astro Tech">
+  <main class="bg-black min-h-screen pt-24 pb-20">
+    
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="text-center mb-12">
+        <h1 class="text-4xl md:text-5xl font-bold text-white mb-4 font-sans tracking-tight">产品中心</h1>
+        <p class="text-neutral-500 max-w-2xl mx-auto">汇聚前沿科技，提供多维度的工业级巡检与飞行解决方案</p>
+      </div>
+
+      <div class="flex flex-wrap justify-center gap-4 mb-16" id="category-filters">
+        {filterButtons.map((cat) => (
+          <button
+            data-category={cat}
+            class="filter-btn px-6 py-2 rounded-full border border-neutral-800 text-neutral-400 text-sm transition-all duration-300 hover:border-blue-500 hover:text-white data-[active=true]:bg-blue-600 data-[active=true]:border-blue-600 data-[active=true]:text-white"
+            data-active={cat === "全部" ? "true" : "false"}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+
+      <div id="products-container">
+        {finalCategories.map((category) => (
+          /* 只有当该分类下有产品时才渲染 */
+          productsByCategory[category]?.length > 0 && (
+            <section 
+              class="category-section mb-16 transition-all duration-500" 
+              data-category={category}
+            >
+              {/* 分类标题分隔线 */}
+              <div class="flex items-center justify-center mb-8 opacity-80">
+                <div class="h-[1px] w-12 bg-neutral-700"></div>
+                <h2 class="mx-4 text-xl font-bold text-neutral-300 tracking-wider">
+                  {category}
+                </h2>
+                <div class="h-[1px] w-12 bg-neutral-700"></div>
+              </div>
+
+              {/* 该分类下的产品网格 */}
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {productsByCategory[category].map((product) => (
+                  <a 
+                    href={`/products/${product.id}`} 
+                    class="group relative bg-neutral-900/40 border border-neutral-800 rounded-2xl overflow-hidden transition-all duration-500 hover:translate-y-[-8px] hover:border-blue-500/30 hover:shadow-[0_20px_40px_rgba(0,0,0,0.7),0_0_20px_rgba(59,130,246,0.1)]"
+                  >
+                    <div class="aspect-[16/10] overflow-hidden relative">
+                      <img 
+                        src={product.data.image} 
+                        alt={product.data.title}
+                        class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      />
+                      <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
+                      
+                      {/* 左上角分类标 - 仍然保留，作为单个卡片的提示 */}
+                      <div class="absolute top-4 left-4">
+                        <span class="px-3 py-1 bg-black/50 backdrop-blur-md border border-white/10 text-white text-[10px] rounded-full uppercase tracking-widest">
+                          {product.data.category}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div class="p-6 relative">
+                      <h3 class="text-xl font-bold text-white mb-2 group-hover:text-blue-400 transition-colors">
+                        {product.data.title}
+                      </h3>
+
+                      <div class="flex flex-wrap gap-2 mb-4">
+                        {product.data.features && product.data.features.split('|').map((f) => (
+                          <span class="text-[10px] px-2 py-1 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded uppercase">
+                            {f.trim()}
+                          </span>
+                        ))}
+                      </div>
+
+                      <p class="text-neutral-400 text-sm line-clamp-2 mb-6">
+                        {product.data.description}
+                      </p>
+
+                      <div class="flex items-center text-white text-sm font-semibold group/btn">
+                        了解详情
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-2 transition-transform group-hover/btn:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                      </div>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </section>
+          )
+        ))}
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  // 将逻辑包裹在 'astro:page-load' 事件中
+  document.addEventListener('astro:page-load', () => {
+    const buttons = document.querySelectorAll('.filter-btn');
+    const sections = document.querySelectorAll('.category-section');
+
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        // 1. 获取目标分类
+        const targetCategory = btn.getAttribute('data-category');
+
+        // 2. 更新按钮状态
+        buttons.forEach(b => b.setAttribute('data-active', 'false'));
+        btn.setAttribute('data-active', 'true');
+
+        // 3. 筛选区块逻辑
+        sections.forEach(section => {
+          const sectionCat = section.getAttribute('data-category');
+          // 这里的 header 获取逻辑根据你的实际 DOM 结构可能需要微调，
+          // 但根据上一版代码，h2 是在 section 内部的，所以不需要 parentElement 查找
+          // 如果你之前是用 divider 包裹的结构，请保留原逻辑。
+          // 这里使用最稳健的 querySelector 查找内部标题容器
+          const header = section.querySelector('h2')?.parentElement; 
+
+          if (targetCategory === '全部') {
+            // 显示所有区块
+            (section as HTMLElement).style.display = 'block';
+            if (header) (header as HTMLElement).style.display = 'flex'; 
+          } else if (sectionCat === targetCategory) {
+            // 显示选中区块
+            (section as HTMLElement).style.display = 'block';
+            // 选中特定分类时，通常保留标题比较美观，如果想隐藏可改为 'none'
+            if (header) (header as HTMLElement).style.display = 'flex';
+          } else {
+            // 隐藏不匹配区块
+            (section as HTMLElement).style.display = 'none';
+          }
+        });
+      });
+    });
+  });
+</script>
+
+<style>
+  /* 简单的淡入动画 */
+  .category-section {
+    animation: fadeIn 0.5s ease forwards;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>

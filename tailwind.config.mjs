@@ -5,6 +5,11 @@ const {
 const svgToDataUri = require("mini-svg-data-uri");
 
 export default {
+  darkMode: 'class', 
+  content: ['./src/**/*.{astro,html,js,jsx,md,mdx,svelte,ts,tsx,vue}'],
+  theme: {
+    extend: {},
+  },
   content: ["./src/**/*.{astro,html,js,jsx,md,mdx,svelte,ts,tsx,vue}"],
   theme: {
     extend: {
@@ -67,6 +72,7 @@ export default {
     },
   },
   plugins: [
+    require('@tailwindcss/typography'),
     // rest of the code
     addVariablesForColors,
     function ({ matchUtilities, theme }) {

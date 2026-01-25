@@ -12,6 +12,8 @@ const products = defineCollection({
     image: z.string(), 
     feature: z.boolean().default(false),
     order: z.number().default(99),
+    features: z.string().optional(), // 新增：产品特性，使用 '|' 分隔
+    category: z.string().default("无人机"), // 新增：产品分类
   })
 });
 
@@ -25,7 +27,18 @@ const cases = defineCollection({
     image: z.string(),        // 对应案例封面图
     cases: z.boolean().default(false), // 控制是否在首页展示
     order: z.number().default(99),
+    date: z.coerce.date(),       // 案例发布日期
   })
 });
 
-export const collections = { products, cases };
+const pages = defineCollection({
+  loader: glob({ pattern: "**/*.md", base: "./src/content/pages" }),
+  schema: z.object({
+    title: z.string(),
+    subtitle: z.string().optional(), // 副标题
+    image: z.string().optional(),    // 顶部头图
+    description: z.string().optional(),
+  })
+});
+
+export const collections = { products, cases, pages };

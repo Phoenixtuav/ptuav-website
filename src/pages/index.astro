@@ -1,6 +1,5 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { Navbar } from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import { Features } from "@/components/Features";
 import { Cases } from "@/components/Cases";
@@ -41,7 +40,6 @@ const featuredCases = allCases
 
 <Layout title="Astro Tech - 构建未来智能架构">
   <main class="bg-black w-full min-h-screen">
-    <Navbar client:load />
     <HeroSection client:load />
     
     {/* 这里的 Features 组件也需要微调以支持 id 字段，见下一步 */}

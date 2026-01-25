@@ -1,50 +1,74 @@
 ---
 import { ClientRouter } from 'astro:transitions';
+import { Navbar } from "@/components/Navbar";
 interface Props {
-  title: string;
+	title: string;
 }
 
 const { title } = Astro.props;
 ---
 
 <!doctype html>
-<html class="dark" lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="description" content="Astro description" />
-    <meta name="viewport" content="width=device-width" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="generator" content={Astro.generator} />
-    <title>{title}</title>
-    {/* 启用视图过渡动画 */}
-    <ClientRouter />
-  </head>
-  <body class="dark:bg-black font-sans antialiased">
-    <slot />
-  </body>
-  <footer
-    class="border-t mt-20 border-neutral-100 border-white/[0.1] px-8 py-20 grid"
-  >
-    <div
-      class="mx-auto text-sm text-neutral-500 flex sm:flex-row flex-col justify-between items-start"
-    >
-      <div>
-        <div class="text-center">
-          <a
-            class="flex text-2xl font-bold text-neutral-600 dark:text-gray-100 selection:bg-emerald-500 mr-10 py-0"
-            href="/"
-          >
-            <div
-              class="relative bg-black text-white flex items-center justify-center rounded-md text-sm antialiased"
-            >
-              <div class="text-sm text-emerald-500 relative z-20"></div>
-            </div>
-            <div class="flex flex-col">
-              <h1 class="text-black dark:text-white">Astro 🤝 Aceternity UI</h1>
-            </div>
-          </a>
-        </div>
-      </div>
-    </div>
-  </footer>
+<html lang="zh-CN">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="description" content="Astro Tech - Future Intelligence" />
+		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="generator" content={Astro.generator} />
+		<title>{title}</title>
+		<ClientRouter />
+        
+        <script is:inline>
+          // 1. 封装主题应用逻辑
+          const applyTheme = () => {
+            const localTheme = localStorage.getItem('theme');
+            // 逻辑：如果有本地缓存，用缓存；否则检测系统偏好
+            if (localTheme === 'dark') {
+              document.documentElement.classList.add('dark');
+            } else if (localTheme === 'light') {
+              document.documentElement.classList.remove('dark');
+            } else {
+              if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.classList.add('dark');
+              } else {
+                document.documentElement.classList.remove('dark');
+              }
+            }
+          };
+
+          // 2. 首次加载立即执行
+          applyTheme();
+
+          // 3. 关键修复：监听 Astro 页面切换事件，切换后立即再次执行
+          document.addEventListener('astro:after-swap', applyTheme);
+        </script>
+	</head>
+	<body class="bg-white text-neutral-900 dark:bg-black dark:text-neutral-200 antialiased selection:bg-blue-500 selection:text-white">
+        <Navbar client:load transition:persist />
+        <slot />
+	</body>
 </html>
+
+<style is:global>
+	/* 3. 我们可以移除之前 hardcode 的背景色设置，改用 Tailwind 类控制 */
+	html {
+		font-family: system-ui, sans-serif;
+		scroll-behavior: smooth;
+	}
+	
+	/* 滚动条美化（可选） */
+	::-webkit-scrollbar {
+		width: 10px;
+	}
+	::-webkit-scrollbar-track {
+		background: #000;
+	}
+	::-webkit-scrollbar-thumb {
+		background: #333;
+		border-radius: 5px;
+	}
+	::-webkit-scrollbar-thumb:hover {
+		background: #555;
+	}
+</style>
