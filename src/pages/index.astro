@@ -1,32 +1,40 @@
 ---
-import { ThreeDCardDemo } from "@/components/3d-card";
 import Layout from "../layouts/Layout.astro";
-import AnimatedPinDemo from "@/components/3d-pin";
-import { FloatingNavDemo } from "@/components/FloatingNavDemo";
-import EvervaultCardDemo from "@/components/EvervaultCardDemo";
-import Hero from "@/components/Hero";
-import { BentoGridDemo } from "@/components/BentoGridDemo";
-import { BentoGridDemo2 } from "@/components/BentoGridDemo2";
-import { InfiniteMovingCardsDemo } from "@/components/InfiniteMovingCardsDemo";
+import { Navbar } from "@/components/Navbar";
+import HeroSection from "@/components/HeroSection";
+import { Features } from "@/components/Features";
+import { Cases } from "@/components/Cases";
+import { Partners } from "@/components/Partners";
+
+// --- 自动获取产品数据逻辑 START ---
+// 1. 获取 src/pages/products/ 下所有 markdown 文件
+const allProducts = await Astro.glob('./products/*.md');
+
+// 2. 筛选出 frontmatter 中标记了 feature: true 的产品
+// 3. 格式化数据以传给组件
+const featuredProducts = allProducts
+  .filter((post) => post.frontmatter.feature === true)
+  .sort((a, b) => (a.frontmatter.order || 99) - (b.frontmatter.order || 99)) // 可选：按 order 排序
+  .map((post) => ({
+    title: post.frontmatter.title,
+    description: post.frontmatter.description,
+    image: post.frontmatter.image, // 对应 markdown 里的 image 字段
+    url: post.url || '#', // Astro 自动生成的页面路径
+  }));
+// --- 自动获取产品数据逻辑 END ---
 ---
 
-<Layout title="Welcome to Astro-Aceternity-ui template.">
-  <FloatingNavDemo client:load />
-  <Hero client:load />
-  <div class="grid-cols-2 px-10 hidden lg:grid">
-    <BentoGridDemo client:load />
-    <div class="mt-[150px]">
-      <BentoGridDemo2 client:load />
-    </div>
-  </div>
-  <div class="grid lg:hidden">
-    <InfiniteMovingCardsDemo client:load />
-  </div>
-  <div
-    class="lg:grid px-10 hidden mt-10 gap-4 place-items-center lg:grid-cols-3 md:grid-cols-2"
-  >
-    <ThreeDCardDemo client:load />
-    <AnimatedPinDemo client:load />
-    <EvervaultCardDemo client:load />
-  </div>
+<Layout title="Astro Tech - 构建未来智能架构">
+  <main class="bg-black w-full min-h-screen">
+    <Navbar client:load />
+    
+    <HeroSection client:load />
+    
+    <Features client:load products={featuredProducts} />
+    
+    <Cases client:load />
+
+    <Partners client:load />
+    
+    </main>
 </Layout>

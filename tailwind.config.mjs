@@ -13,6 +13,12 @@ export default {
           "scroll var(--animation-duration, 40s) var(--animation-direction, forwards) linear infinite",
         aurora: "aurora 60s linear infinite",
         "meteor-effect": "meteor 5s linear infinite",
+        // [修改] 极光渐变：时间拉长到8秒，更柔和
+        'aurora-text': 'aurora-text 8s linear infinite',
+        // [修改] 反重力悬浮：时间拉长到6秒，模拟失重
+        'hover-heavy': 'hover-heavy 6s ease-in-out infinite',
+        // [新增] 光晕脉冲：用于背景光
+        'pulse-slow': 'pulse-slow 4s ease-in-out infinite',
       },
       keyframes: {
         scroll: {
@@ -35,6 +41,27 @@ export default {
           to: {
             backgroundPosition: "350% 50%, 350% 50%",
           },
+        },
+        // 文字颜色流动：只在相近色系间流动，避免刺眼
+        'aurora-text': {
+          '0%, 100%': {
+            'background-size': '200% auto',
+            'background-position': '0% center',
+          },
+          '50%': {
+            'background-size': '200% auto',
+            'background-position': '100% center',
+          },
+        },
+        // 悬浮：幅度减小（-10px），更稳重
+        'hover-heavy': {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-10px)' }, // 幅度改小，更显沉稳
+        },
+        // 光晕：忽明忽暗
+        'pulse-slow': {
+          '0%, 100%': { opacity: 0.4, transform: 'scale(1)' },
+          '50%': { opacity: 0.8, transform: 'scale(1.1)' },
         },
       },
     },
