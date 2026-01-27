@@ -4,6 +4,12 @@ import { motion, useScroll, useMotionValueEvent, AnimatePresence } from "framer-
 import { IconMenu2, IconX, IconSun, IconMoon, IconChevronDown, IconCheck, IconCopy } from "@tabler/icons-react";
 import { CONTACT_CONFIG } from "../config/contacts";
 
+type NavItem = {
+  name: string;
+  link?: string;
+  children?: { name: string; link: string }[];
+};
+
 export const Navbar = () => {
   const { scrollY } = useScroll();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -11,6 +17,10 @@ export const Navbar = () => {
   const [isContactOpen, setIsContactOpen] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">("dark");
   
+  // 控制桌面端下拉菜单的显示（存储当前悬停的索引）
+  const [hoveredNavIndex, setHoveredNavIndex] = useState<number | null>(null);
+  // 控制移动端子菜单的展开（存储当前展开的菜单名称）
+  const [expandedMobile, setExpandedMobile] = useState<string | null>(null);
   // 用于显示“已复制”的临时状态，key 为 platform 名称
   const [copiedState, setCopiedState] = useState<string | null>(null);
 
@@ -149,11 +159,19 @@ export const Navbar = () => {
     );
   };
 
-  const navItems = [
+  // 配置导航菜单，加入“服务支持”下拉项
+  const navItems: NavItem[] = [
     { name: "首页", link: "/" },
     { name: "产品中心", link: "/products" },
     { name: "合作案例", link: "/cases" },
-    { name: "技术文档", link: "http://192.168.2.110:4322" },
+    { 
+      name: "服务支持", 
+      children: [
+        { name: "技术文档", link: "http://192.168.2.110:4322" }, // 假设技术文档路径，可按需修改
+        { name: "售后申请", link: "/support/after-sales" },
+        { name: "保修查询", link: "/support/warranty" }
+      ]
+    },
     { name: "关于我们", link: "/about" },
   ];
 
@@ -184,21 +202,63 @@ export const Navbar = () => {
       {/* 中间：导航链接 (桌面端) */}
       <div className="hidden md:flex items-center space-x-8">
         {navItems.map((item, idx) => (
-          <a
-            key={idx}
-            href={item.link}
-            className="relative text-sm font-medium text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white transition-colors group"
+          <div 
+            key={idx} 
+            className="relative group"
+            onMouseEnter={() => setHoveredNavIndex(idx)}
+            onMouseLeave={() => setHoveredNavIndex(null)}
           >
-            {item.name}
-            <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-blue-500 transition-all duration-300 group-hover:w-full" />
-          </a>
+            {item.children ? (
+              // 1. 带下拉菜单的项（修改：移除了 IconChevronDown，保留了 hover 触发）
+              <button className="relative text-sm font-medium text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white transition-colors py-2 cursor-default">
+                {item.name}
+                {/* 底部指示条，表示激活状态 */}
+                <span className={cn(
+                    "absolute bottom-0 left-0 w-0 h-[2px] bg-blue-500 transition-all duration-300",
+                    hoveredNavIndex === idx ? "w-full" : ""
+                )} />
+              </button>
+            ) : (
+              // 2. 普通链接项
+              <a
+                href={item.link}
+                className="relative text-sm font-medium text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white transition-colors block py-2"
+              >
+                {item.name}
+                <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-blue-500 transition-all duration-300 group-hover:w-full" />
+              </a>
+            )}
+
+            {/* 下拉菜单内容 */}
+            <AnimatePresence>
+              {item.children && hoveredNavIndex === idx && (
+                <motion.div
+                  // 修改点 1：在这里显式添加 x: "-50%"，让 Framer Motion 接管水平居中
+                  initial={{ opacity: 0, y: 5, scale: 0.98, x: "-50%" }}
+                  animate={{ opacity: 1, y: 0, scale: 1, x: "-50%" }}
+                  exit={{ opacity: 0, y: 5, scale: 0.98, x: "-50%" }}
+                  transition={{ duration: 0.15 }}
+                  // 修改点 2：保留 left-1/2，但在 className 中移除了 -translate-x-1/2 (因为上面已经写了)
+                  className="absolute left-1/2 top-full mt-2 w-36 rounded-xl bg-white/95 dark:bg-neutral-900/95 backdrop-blur-xl border border-neutral-200 dark:border-neutral-800 shadow-xl overflow-hidden p-1 ring-1 ring-black/5 flex flex-col z-50"
+                >
+                  {item.children.map((subItem) => (
+                    <a
+                      key={subItem.name}
+                      href={subItem.link}
+                      className="block px-4 py-2 text-sm text-center text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-white/10 rounded-lg transition-colors font-medium"
+                    >
+                      {subItem.name}
+                    </a>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         ))}
       </div>
 
-      {/* 右侧：功能区 */}
+      {/* 右侧功能区 */}
       <div className="flex items-center gap-4">
-        
-        {/* 主题切换按钮 */}
         <button
           onClick={toggleTheme}
           className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 text-neutral-600 dark:text-neutral-300 transition-colors"
@@ -206,7 +266,6 @@ export const Navbar = () => {
           {theme === "dark" ? <IconSun size={20} /> : <IconMoon size={20} />}
         </button>
 
-        {/* 桌面端：联系方式 (下拉菜单) */}
         <div className="relative hidden md:block">
           <button 
             onClick={() => setIsContactOpen(!isContactOpen)}
@@ -216,7 +275,6 @@ export const Navbar = () => {
             <IconChevronDown size={16} className={`transition-transform duration-300 ${isContactOpen ? "rotate-180" : ""}`} />
           </button>
 
-          {/* 下拉菜单 */}
           <AnimatePresence>
             {isContactOpen && (
               <motion.div
@@ -232,7 +290,6 @@ export const Navbar = () => {
           </AnimatePresence>
         </div>
 
-        {/* 移动端菜单按钮 */}
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           className="md:hidden p-2 text-neutral-800 dark:text-white focus:outline-none"
@@ -241,7 +298,7 @@ export const Navbar = () => {
         </button>
       </div>
 
-      {/* 移动端下拉菜单 (全屏/半屏折叠) */}
+      {/* 移动端菜单 */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
@@ -250,20 +307,57 @@ export const Navbar = () => {
             exit={{ opacity: 0, height: 0 }}
             className="absolute top-full left-0 right-0 bg-white/95 dark:bg-black/95 backdrop-blur-xl border-t border-neutral-200 dark:border-neutral-800 shadow-xl md:hidden overflow-hidden"
           >
-            <div className="flex flex-col p-6 space-y-4 max-h-[80vh] overflow-y-auto">
-              {/* 导航项 */}
+            <div className="flex flex-col p-6 space-y-2 max-h-[80vh] overflow-y-auto">
               {navItems.map((item) => (
-                <a
-                  key={item.name}
-                  href={item.link}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="text-lg font-medium text-neutral-800 dark:text-neutral-200 hover:text-blue-600 py-2 border-b border-neutral-100 dark:border-white/5 last:border-0"
-                >
-                  {item.name}
-                </a>
+                <div key={item.name} className="border-b border-neutral-100 dark:border-white/5 last:border-0">
+                  {item.children ? (
+                    // 移动端折叠菜单
+                    <div>
+                      <button 
+                        onClick={() => setExpandedMobile(expandedMobile === item.name ? null : item.name)}
+                        className="w-full flex items-center justify-between text-lg font-medium text-neutral-800 dark:text-neutral-200 py-3"
+                      >
+                        {item.name}
+                        <IconChevronDown 
+                          size={20} 
+                          className={cn("transition-transform duration-300", expandedMobile === item.name ? "rotate-180" : "")}
+                        />
+                      </button>
+                      <AnimatePresence>
+                        {expandedMobile === item.name && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="overflow-hidden bg-neutral-50 dark:bg-white/5 rounded-lg mb-2"
+                          >
+                            <div className="flex flex-col">
+                              {item.children.map(subItem => (
+                                <a 
+                                  key={subItem.name}
+                                  href={subItem.link}
+                                  className="py-3 px-4 text-sm text-neutral-600 dark:text-neutral-300 hover:text-blue-500 border-b border-neutral-200/50 dark:border-white/5 last:border-0"
+                                >
+                                  {subItem.name}
+                                </a>
+                              ))}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  ) : (
+                    <a
+                      href={item.link}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="block text-lg font-medium text-neutral-800 dark:text-neutral-200 hover:text-blue-600 py-3"
+                    >
+                      {item.name}
+                    </a>
+                  )}
+                </div>
               ))}
               
-              {/* 移动端联系方式列表 (改为垂直排列，适应窄屏) */}
               <div className="pt-4">
                 <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-3 block">联系方式</span>
                 <div className="flex flex-col gap-3">
