@@ -167,7 +167,7 @@ export const Navbar = () => {
     { 
       name: "服务支持", 
       children: [
-        { name: "技术文档", link: "http://192.168.2.110:4322" }, // 假设技术文档路径，可按需修改
+        { name: "技术文档", link: "https://wiki.plumesky.com" }, // 假设技术文档路径，可按需修改
         { name: "售后申请", link: "/support/after-sales" },
         { name: "保修查询", link: "/support/warranty" }
       ]
