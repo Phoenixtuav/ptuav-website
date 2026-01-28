@@ -1,7 +1,7 @@
 ---
 title: "Quantum Server X1"
 description: "专为大模型训练设计的量子级服务器，算力提升 400%，能耗降低 60%。"
-image: "/products/test.jpg"
+image: "/products/test.png"
 feature: true
 category: "配件"
 order: 1
