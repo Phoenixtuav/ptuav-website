@@ -43,9 +43,9 @@ const featuredCases = allCases
     <HeroSection client:load />
     
     {/* 这里的 Features 组件也需要微调以支持 id 字段，见下一步 */}
-    <Features client:load products={featuredProducts} />
+    <Features client:visible products={featuredProducts} />
     
-    <Cases client:load items={featuredCases} />
-    <Partners client:load />
+    <Cases client:visible items={featuredCases} />
+    <Partners client:visible />
   </main>
 </Layout>
